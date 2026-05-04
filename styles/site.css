@@ -483,8 +483,42 @@ section + section { border-top: var(--rule-soft); }
 .about-tags span + span::before {
   content: "·"; position: absolute; left: -14px; color: var(--silver);
 }
+
+/* Catherine's portrait — editorial frame */
+.catherine-portrait {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.catherine-portrait img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: 50% 25%;
+  border: 1px solid var(--silver-soft);
+  outline: 1px solid var(--silver-soft);
+  outline-offset: 6px;
+  background: var(--paper);
+  filter: saturate(0.92) contrast(1.02);
+  transition: filter 400ms ease;
+}
+.catherine-portrait:hover img {
+  filter: saturate(1) contrast(1.04);
+}
+.catherine-portrait figcaption {
+  font-family: var(--mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--taupe);
+  padding-top: 6px;
+  text-align: center;
+}
 @media (max-width: 720px) {
   .about-card { grid-template-columns: 1fr; }
+  .catherine-portrait img { object-position: 50% 20%; }
 }
 
 /* ---------- booking section ---------- */
