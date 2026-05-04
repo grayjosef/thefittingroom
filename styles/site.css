@@ -463,9 +463,9 @@ section + section { border-top: var(--rule-soft); }
 
 /* ---------- about portrait ---------- */
 .about-card {
-  display: grid; grid-template-columns: 240px 1fr;
+  display: grid; grid-template-columns: 340px 1fr;
   gap: clamp(28px, 4vw, 56px);
-  align-items: start;
+  align-items: stretch;
   padding: clamp(28px, 4vw, 48px);
   background: var(--paper);
   border: 1px solid var(--silver-soft);
@@ -484,17 +484,18 @@ section + section { border-top: var(--rule-soft); }
   content: "·"; position: absolute; left: -14px; color: var(--silver);
 }
 
-/* Catherine's portrait — editorial frame */
+/* Catherine's portrait — editorial frame, full-height */
 .catherine-portrait {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
 }
 .catherine-portrait img {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 4;
+  height: 100%;
   object-fit: cover;
   object-position: 50% 25%;
   border: 1px solid var(--silver-soft);
@@ -507,18 +508,14 @@ section + section { border-top: var(--rule-soft); }
 .catherine-portrait:hover img {
   filter: saturate(1) contrast(1.04);
 }
-.catherine-portrait figcaption {
-  font-family: var(--mono, "JetBrains Mono", ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  color: var(--taupe);
-  padding-top: 6px;
-  text-align: center;
-}
 @media (max-width: 720px) {
   .about-card { grid-template-columns: 1fr; }
-  .catherine-portrait img { object-position: 50% 20%; }
+  .catherine-portrait { min-height: 0; }
+  .catherine-portrait img {
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-position: 50% 20%;
+  }
 }
 
 /* ---------- booking section ---------- */

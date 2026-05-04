@@ -210,7 +210,6 @@ const About = () => (
             alt="Catherine Gray, founder of The Fitting Room at Gray House"
             loading="lazy"
           />
-          <figcaption>Catherine Gray · Stevens Point, Wisconsin</figcaption>
         </figure>
         <div>
           <p className="subhead">
