@@ -1,6 +1,12 @@
 // All landing-page sections live here, broken into small components.
 // They share the BookingFlow modal via a callback passed from main.
 
+// Helper: do we have enough gallery items to expose nav links to it?
+const hasGallery = () => {
+  const items = (typeof window !== "undefined" && window.GALLERY_ITEMS) || [];
+  return items.length >= 4;
+};
+
 const Header = ({ onBook, onMenu }) => (
   <header className="site-header">
     <div className="site-header-inner">
@@ -12,6 +18,7 @@ const Header = ({ onBook, onMenu }) => (
       <nav className="nav-primary" aria-label="Primary">
         <a href="#services">Services</a>
         <a href="#about">About</a>
+        {hasGallery() && <a href="#gallery">Gallery</a>}
         <a href="#policies">Policies</a>
         <a href="#contact">Contact</a>
       </nav>
@@ -442,6 +449,7 @@ const Footer = () => (
           <ul>
             <li><a href="#services">Services</a></li>
             <li><a href="#about">About</a></li>
+            {hasGallery() && <li><a href="#gallery">Gallery</a></li>}
             <li><a href="#book">Book</a></li>
             <li><a href="#contact">Contact</a></li>
           </ul>
@@ -492,6 +500,7 @@ const MobileDrawer = ({ open, onClose, onBook }) => {
         <button className="m-drawer-close" onClick={close} aria-label="Close menu">×</button>
         <a href="#services" onClick={close}>Services</a>
         <a href="#about" onClick={close}>About</a>
+        {hasGallery() && <a href="#gallery" onClick={close}>Gallery</a>}
         <a href="#book" onClick={close}>Book Consultation</a>
         <a href="#policies" onClick={close}>Policies</a>
         <a href="#contact" onClick={close}>Contact</a>

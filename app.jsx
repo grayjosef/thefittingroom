@@ -26,6 +26,7 @@ const App = () => {
         <Quiet />
         <Services onBook={openBooking} />
         <About />
+        <Gallery />
         <Booking onBook={openBooking} />
         <Policies />
         <Contact />
