@@ -1,0 +1,22 @@
+# macOS / Windows / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Node (if added later)
+node_modules/
+.next/
+dist/
+build/
+*.log
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Windows NTFS metadata when copying from /Downloads in WSL
+*:Zone.Identifier

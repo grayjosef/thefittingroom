@@ -1,0 +1,193 @@
+/* =====================================================================
+ * BULL CITY SIGNATURE — theme-aware styles
+ * ---------------------------------------------------------------------
+ * Two themes via parent attribute:
+ *   <BCSignature />                  → defaults to dark theme
+ *   <div data-bcs-theme="light">     → light theme (slate on ivory)
+ *     <BCSignature />
+ *   </div>
+ *
+ * Or apply class .bcs-sig-light directly to the wrapper.
+ * Self-contained; no dependencies on the host site's design tokens.
+ * ===================================================================== */
+
+.bcs-sig {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 16px 24px;
+  width: 100%;
+  text-align: center;
+}
+
+/* ----- Flag holder (dark theme — default) ----- */
+.bcs-sig-flag {
+  background: #14181F;
+  border: 1px solid rgba(236, 229, 214, 0.12);
+  border-radius: 4px;
+  padding: 6px 8px 4px;
+  cursor: pointer;
+  transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  line-height: 0;
+}
+.bcs-sig-flag:hover {
+  border-color: #B83A28;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.65);
+}
+.bcs-sig-flag:focus-visible {
+  outline: 2px solid #C8932E;
+  outline-offset: 3px;
+}
+
+.bcs-flag-svg { display: block; border-radius: 1px; }
+
+/* ----- Tagline (dark theme — default) ----- */
+.bcs-sig-tag {
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(236, 229, 214, 0.55);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+.bcs-sig-tag:hover { color: #ECE5D6; }
+.bcs-sig-mark { color: #C8932E; font-weight: 600; }
+
+/* ----- LIGHT THEME OVERRIDES ----- */
+[data-bcs-theme="light"] .bcs-sig,
+.bcs-sig-light .bcs-sig,
+.bcs-sig.bcs-sig-light {
+  /* layout same */
+}
+
+[data-bcs-theme="light"] .bcs-sig-flag,
+.bcs-sig-light .bcs-sig-flag,
+.bcs-sig.bcs-sig-light .bcs-sig-flag {
+  background: transparent;
+  border: 1px solid rgba(58, 66, 80, 0.18);
+  box-shadow: 0 4px 14px -8px rgba(58, 66, 80, 0.25);
+}
+[data-bcs-theme="light"] .bcs-sig-flag:hover,
+.bcs-sig-light .bcs-sig-flag:hover,
+.bcs-sig.bcs-sig-light .bcs-sig-flag:hover {
+  border-color: #3A4250;
+  box-shadow: 0 8px 18px -10px rgba(58, 66, 80, 0.4);
+}
+
+[data-bcs-theme="light"] .bcs-sig-tag,
+.bcs-sig-light .bcs-sig-tag,
+.bcs-sig.bcs-sig-light .bcs-sig-tag {
+  color: rgba(58, 66, 80, 0.62);
+}
+[data-bcs-theme="light"] .bcs-sig-tag:hover,
+.bcs-sig-light .bcs-sig-tag:hover,
+.bcs-sig.bcs-sig-light .bcs-sig-tag:hover {
+  color: #3A4250;
+}
+[data-bcs-theme="light"] .bcs-sig-mark,
+.bcs-sig-light .bcs-sig-mark,
+.bcs-sig.bcs-sig-light .bcs-sig-mark {
+  color: #3A4250;
+  font-weight: 600;
+}
+
+/* ----- Flag-meaning modal (theme-agnostic — keeps dark for readability) ----- */
+.bcs-flag-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 11, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: bcsFadeIn 240ms ease-out;
+}
+
+@keyframes bcsFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.bcs-flag-panel-inner {
+  background: #14181F;
+  border: 1px solid rgba(200, 147, 46, 0.45);
+  border-radius: 8px;
+  padding: 36px 36px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 380px;
+  width: calc(100% - 32px);
+  text-align: center;
+  color: #ECE5D6;
+}
+
+.bcs-flag-eyebrow {
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(236, 229, 214, 0.55);
+}
+
+.bcs-flag-meaning {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: stretch;
+}
+
+.bcs-flag-meaning li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgba(236, 229, 214, 0.78);
+}
+
+.bcs-fm-sw {
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  border: 1px solid rgba(236, 229, 214, 0.12);
+  flex-shrink: 0;
+}
+
+.bcs-flag-foot {
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(236, 229, 214, 0.45);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.bcs-flag-close {
+  background: transparent;
+  border: 1px solid rgba(236, 229, 214, 0.12);
+  color: rgba(236, 229, 214, 0.78);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+.bcs-flag-close:hover {
+  color: #ECE5D6;
+  border-color: rgba(236, 229, 214, 0.45);
+}
