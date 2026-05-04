@@ -204,14 +204,7 @@ const About = () => (
       </div>
 
       <div className="about-card">
-        <figure className="catherine-portrait">
-          <img
-            src="assets/catherine-headshot.jpg"
-            alt="Catherine Gray, founder of The Fitting Room at Gray House"
-            loading="lazy"
-          />
-          <figcaption>Catherine Gray · Stevens Point, Wisconsin</figcaption>
-        </figure>
+        <Placeholder label="Catherine Gray" caption="Editorial portrait · neutral studio · soft daylight" ratio="3 / 4" tone="taupe" />
         <div>
           <p className="subhead">
             Catherine Gray has spent decades working with fabric, fit, and form.
