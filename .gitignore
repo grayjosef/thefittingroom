@@ -24,3 +24,6 @@ build/
 # Local Cloudflare dev secrets — never commit
 .dev.vars
 .wrangler/
+
+# Build output
+dist/
