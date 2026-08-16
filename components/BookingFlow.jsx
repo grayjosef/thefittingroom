@@ -1,8 +1,13 @@
 // Multi-step booking flow — calendar slot, intake form, payment screen, confirmation.
-// All client-side state. No real payment is processed; the payment step is a designed
-// placeholder representing the Stripe / booking-vendor handoff.
+//
+// The layout, copy and class names here are the Claude Design export and should
+// keep matching it. What has been added is data plumbing, marked GH-WIRE, which
+// talks to window.GH (scripts/gh-booking.js) for real availability and payment.
+//
+// Every GH-WIRE block degrades: if the API isn't reachable, this falls back to
+// the original designed placeholder behaviour so the export still demos alone.
 
-const { useState, useMemo, useEffect } = React;
+const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
 // ---------- helpers ----------
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -39,6 +44,12 @@ function fakeSlotsFor(date) {
   return base.filter((_, i) => i !== seed && i !== (seed + 3) % base.length);
 }
 
+/* GH-WIRE: local date key, matching the API's day format. */
+function dayKey(date) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+}
+
 // ---------- pieces ----------
 const Stepper = ({ step }) => {
   const labels = ["Select time", "Your details", "Reserve", "Confirmed"];
@@ -57,11 +68,16 @@ const Stepper = ({ step }) => {
   );
 };
 
-const Calendar = ({ value, onChange }) => {
+const Calendar = ({ value, onChange, openDays }) => {
   const today = new Date();
   const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const [view, setView] = useState({ y: today.getFullYear(), m: today.getMonth() });
   const cells = useMemo(() => buildMonthDays(view.y, view.m), [view]);
+
+  /* GH-WIRE: ask the API which days in this month still have openings. */
+  useEffect(() => {
+    if (openDays && openDays.load) openDays.load(view.y, view.m);
+  }, [view, openDays]);
 
   const goPrev = () => {
     const d = new Date(view.y, view.m - 1, 1);
@@ -91,7 +107,12 @@ const Calendar = ({ value, onChange }) => {
       <div className="cal-grid">
         {cells.map((d, i) => {
           if (!d) return <div key={i} className="cal-cell is-empty" />;
-          const sel = isSelectable(d, todayMidnight);
+          let sel = isSelectable(d, todayMidnight);
+          /* GH-WIRE: a real calendar overrides the weekday rule of thumb. */
+          if (sel && openDays && openDays.days) {
+            const count = openDays.days[dayKey(d)];
+            if (count !== undefined) sel = count > 0;
+          }
           const isSelected = value && d.getTime() === value.getTime();
           return (
             <button
@@ -112,12 +133,14 @@ const Calendar = ({ value, onChange }) => {
   );
 };
 
-const Slots = ({ date, value, onChange }) => {
-  const slots = fakeSlotsFor(date);
+const Slots = ({ date, value, onChange, slots, loading }) => {
   if (!date) {
     return <div className="slots-empty">Select a date to view available consultation times.</div>;
   }
-  if (slots.length === 0) {
+  if (loading) {
+    return <div className="slots-empty">Checking the studio calendar…</div>;
+  }
+  if (!slots || slots.length === 0) {
     return <div className="slots-empty">No openings on this date. Please choose another.</div>;
   }
   return (
@@ -129,12 +152,12 @@ const Slots = ({ date, value, onChange }) => {
       <div className="slots-grid">
         {slots.map(s => (
           <button
-            key={s}
+            key={s.label}
             type="button"
-            className={`slot ${value === s ? "is-selected" : ""}`}
+            className={`slot ${value === s.label ? "is-selected" : ""}`}
             onClick={() => onChange(s)}
           >
-            {s}
+            {s.label}
           </button>
         ))}
       </div>
@@ -208,7 +231,9 @@ const IntakeForm = ({ data, setData }) => {
 };
 
 // ---------- payment screen ----------
-const PaymentScreen = ({ summary, agree, setAgree, onPay, paying }) => (
+const money = (cents) => `$${(cents / 100).toFixed(2)}`;
+
+const PaymentScreen = ({ summary, agree, setAgree, onPay, paying, pricing, live, mountRef, error }) => (
   <div className="pay">
     <div className="pay-summary">
       <h4 className="pay-title">Reservation summary</h4>
@@ -223,12 +248,12 @@ const PaymentScreen = ({ summary, agree, setAgree, onPay, paying }) => (
       <div className="pay-rule" />
 
       <dl className="pay-dl pay-money">
-        <div><dt>Booking fee</dt><dd>$25.00</dd></div>
-        <div><dt>Processing</dt><dd>$1.05</dd></div>
-        <div className="pay-total"><dt>Total today</dt><dd>$26.05</dd></div>
+        <div><dt>Booking fee</dt><dd>{money(pricing.feeCents)}</dd></div>
+        <div><dt>Processing</dt><dd>{money(pricing.processingCents)}</dd></div>
+        <div className="pay-total"><dt>Total today</dt><dd>{money(pricing.totalCents)}</dd></div>
       </dl>
       <p className="pay-fineprint">
-        Your $25 booking fee reserves your appointment time and will be applied toward your final alterations bill if you choose to move forward with alterations.
+        Your {money(pricing.feeCents)} booking fee reserves your appointment time and will be applied toward your final alterations bill if you choose to move forward with alterations.
       </p>
     </div>
 
@@ -238,27 +263,38 @@ const PaymentScreen = ({ summary, agree, setAgree, onPay, paying }) => (
         <span>Secure checkout · Stripe</span>
       </div>
 
-      <Field label="Card number" span={12}>
-        <input className="ipt" placeholder="1234 1234 1234 1234" />
-      </Field>
-      <div className="form-grid">
-        <Field label="Expiry" span={6}><input className="ipt" placeholder="MM / YY" /></Field>
-        <Field label="CVC" span={6}><input className="ipt" placeholder="CVC" /></Field>
-        <Field label="ZIP" span={6}><input className="ipt" placeholder="54481" /></Field>
-        <Field label="Country" span={6}>
-          <select className="ipt"><option>United States</option></select>
-        </Field>
-      </div>
+      {/* GH-WIRE: when Stripe is configured, its Payment Element (which includes
+          Link) mounts here in place of the designed placeholder inputs. */}
+      {live ? (
+        <div className="pay-element" ref={mountRef} />
+      ) : (
+        <React.Fragment>
+          <Field label="Card number" span={12}>
+            <input className="ipt" placeholder="1234 1234 1234 1234" disabled />
+          </Field>
+          <div className="form-grid">
+            <Field label="Expiry" span={6}><input className="ipt" placeholder="MM / YY" disabled /></Field>
+            <Field label="CVC" span={6}><input className="ipt" placeholder="CVC" disabled /></Field>
+            <Field label="ZIP" span={6}><input className="ipt" placeholder="54481" disabled /></Field>
+            <Field label="Country" span={6}>
+              <select className="ipt" disabled><option>United States</option></select>
+            </Field>
+          </div>
+          <p className="pay-note">Card payment isn't switched on yet — reserving will hold your time without charge.</p>
+        </React.Fragment>
+      )}
 
       <label className="agree">
         <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
         <span>
-          I understand that my $25 booking fee reserves my appointment and will be applied toward my final alterations bill if I move forward with alterations. I understand the booking fee is non-refundable if I cancel, miss my appointment, or fail to reschedule at least 24 hours in advance. I may reschedule one time only if requested at least 24 hours before my appointment.
+          I understand that my {money(pricing.feeCents)} booking fee reserves my appointment and will be applied toward my final alterations bill if I move forward with alterations. I understand the booking fee is non-refundable if I cancel, miss my appointment, or fail to reschedule at least 24 hours in advance. I may reschedule one time only if requested at least 24 hours before my appointment.
         </span>
       </label>
 
+      {error && <p className="pay-error" role="alert">{error}</p>}
+
       <button type="button" className="btn btn-primary btn-lg" disabled={!agree || paying} onClick={onPay}>
-        {paying ? "Reserving…" : "Pay $26.05 & reserve appointment"}
+        {paying ? "Reserving…" : live ? `Pay ${money(pricing.totalCents)} & reserve appointment` : "Reserve appointment"}
       </button>
       <p className="pay-note">The appointment is not confirmed until payment is complete.</p>
     </div>
@@ -266,8 +302,12 @@ const PaymentScreen = ({ summary, agree, setAgree, onPay, paying }) => (
 );
 
 // ---------- confirmation ----------
-const Confirmation = ({ summary, onClose }) => {
-  const ref = "GH-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+const Confirmation = ({ summary, onClose, reference, calendarFailed, emailLive }) => {
+  const ref = reference || "GH-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+  /* GH-WIRE: only promise an email when one can actually be sent. */
+  const sub = emailLive
+    ? `A confirmation has been sent to ${summary.email || "your email"}. Catherine will reach out personally if any details need adjusting.`
+    : `Catherine will be in touch personally to confirm the details with you.`;
   return (
     <div className="confirm">
       <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
@@ -275,7 +315,7 @@ const Confirmation = ({ summary, onClose }) => {
         <path d="M17 29 l8 8 l16 -18" fill="none" stroke="#3A4250" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <h3 className="confirm-title">Your consultation is reserved.</h3>
-      <p className="confirm-sub">A confirmation has been sent to {summary.email || "your email"}. Catherine will reach out personally if any details need adjusting.</p>
+      <p className="confirm-sub">{sub}</p>
 
       <div className="confirm-card">
         <div className="confirm-row"><span>Reference</span><strong>{ref}</strong></div>
@@ -285,19 +325,28 @@ const Confirmation = ({ summary, onClose }) => {
         <div className="confirm-row"><span>Studio</span><strong>By appointment · Stevens Point, WI</strong></div>
       </div>
 
+      {calendarFailed && (
+        <p className="confirm-sub">
+          Your payment went through and your time is reserved. Catherine will confirm the
+          calendar invitation with you directly.
+        </p>
+      )}
+
       <div className="confirm-actions">
         <button className="btn btn-ghost" type="button" onClick={onClose}>Close</button>
-        <button className="btn btn-primary" type="button" onClick={onClose}>Add to calendar</button>
+        <button className="btn btn-primary" type="button" onClick={onClose}>Done</button>
       </div>
     </div>
   );
 };
 
 // ---------- main ----------
+const DEFAULT_PRICING = { feeCents: 2500, processingCents: 105, totalCents: 2605 };
+
 const BookingFlow = ({ open, onClose }) => {
   const [step, setStep] = useState(0);
   const [date, setDate] = useState(null);
-  const [time, setTime] = useState("");
+  const [slot, setSlot] = useState(null);
   const [data, setData] = useState({
     name: "", email: "", phone: "", weddingDate: "",
     purchased: "", designer: "", shop: "",
@@ -306,36 +355,168 @@ const BookingFlow = ({ open, onClose }) => {
   const [agree, setAgree] = useState(false);
   const [paying, setPaying] = useState(false);
 
+  /* GH-WIRE: everything below is integration state. */
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [openDayMap, setOpenDayMap] = useState(null);
+  const [pricing, setPricing] = useState(DEFAULT_PRICING);
+  const [emailLive, setEmailLive] = useState(false);
+  const [booking, setBooking] = useState(null);
+  const [error, setError] = useState("");
+  const [advancing, setAdvancing] = useState(false);
+  const [confirmed, setConfirmed] = useState(null);
+  const payMountRef = useRef(null);
+
+  const api = typeof window !== "undefined" ? window.GH : null;
+
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  /* GH-WIRE: pick up the real fee from the server so the copy can't drift. */
+  useEffect(() => {
+    if (!open || !api) return;
+    api.probe().then((health) => {
+      if (!health) return;
+      if (health.booking) {
+        setPricing({
+          feeCents: health.booking.feeCents,
+          processingCents: health.booking.processingCents,
+          totalCents: health.booking.totalCents,
+        });
+      }
+      setEmailLive(Boolean(health.integrations && health.integrations.email));
+    }).catch(() => {});
+  }, [open, api]);
+
+  /* GH-WIRE: month availability, used to close days the studio isn't free. */
+  const loadMonth = useCallback((year, monthIdx) => {
+    if (!api) return;
+    api.monthAvailability(year, monthIdx).then((res) => {
+      if (res && res.days) setOpenDayMap((prev) => ({ ...(prev || {}), ...res.days }));
+    }).catch(() => {});
+  }, [api]);
+
+  const openDays = useMemo(() => ({ days: openDayMap, load: loadMonth }), [openDayMap, loadMonth]);
+
+  /* GH-WIRE: real times for the chosen day, falling back to the design's. */
+  useEffect(() => {
+    let cancelled = false;
+    if (!date) { setSlots([]); return; }
+
+    const fallback = () => fakeSlotsFor(date).map((label) => ({ label, startIso: null }));
+
+    if (!api) { setSlots(fallback()); return; }
+
+    setSlotsLoading(true);
+    api.slotsFor(date)
+      .then((res) => {
+        if (cancelled) return;
+        setSlots(res === null ? fallback() : res.map((s) => ({ label: s.label, startIso: s.startIso })));
+      })
+      .catch(() => { if (!cancelled) setSlots(fallback()); })
+      .finally(() => { if (!cancelled) setSlotsLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [date, api]);
 
   if (!open) return null;
 
   const summary = {
     dateLabel: date ? date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : "—",
-    time: time || "—",
+    time: slot ? slot.label : "—",
     name: data.name,
     email: data.email,
   };
 
-  const canStep0 = date && time;
-  const canStep1 = data.name && data.email && data.phone;
+  const canStep0 = Boolean(date && slot);
+  const canStep1 = Boolean(data.name && data.email && data.phone);
+  const paymentLive = Boolean(booking && booking.clientSecret && booking.publishableKey);
 
-  const handlePay = () => {
+  /* GH-WIRE: details -> payment. Holds the slot, saves the intake, opens a
+     PaymentIntent, then mounts the Payment Element. */
+  const goToPayment = async () => {
+    setError("");
+
+    if (!api || !slot || !slot.startIso) {
+      setStep(2);   // no backend: the design's placeholder screen
+      return;
+    }
+
+    setAdvancing(true);
+    try {
+      const held = await api.hold(slot.startIso);
+      const created = await api.createBooking({
+        holdId: held && held.hold ? held.hold.id : "",
+        startIso: slot.startIso,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        weddingDate: data.weddingDate,
+        purchased: data.purchased,
+        designer: data.designer,
+        shop: data.shop,
+        work: data.work,
+        timeline: data.timeline,
+        notes: data.notes,
+      });
+
+      setBooking(created);
+      setStep(2);
+
+      if (created && created.clientSecret) {
+        // Wait for the step-2 markup to exist before mounting into it.
+        requestAnimationFrame(() => {
+          api.mountPayment(payMountRef.current, {
+            clientSecret: created.clientSecret,
+            publishableKey: created.publishableKey,
+          }).catch(() => setError("The card form couldn't load. Please refresh and try again."));
+        });
+      }
+    } catch (err) {
+      setError(err.message || "We couldn't hold that time. Please pick another.");
+    } finally {
+      setAdvancing(false);
+    }
+  };
+
+  /* GH-WIRE: take payment, then confirm server-side. */
+  const handlePay = async () => {
+    setError("");
+
+    if (!api) {                       // design-only fallback
+      setPaying(true);
+      setTimeout(() => { setPaying(false); setStep(3); }, 1100);
+      return;
+    }
+
     setPaying(true);
-    setTimeout(() => { setPaying(false); setStep(3); }, 1100);
+    try {
+      const result = await api.payAndFinalize(booking);
+      setConfirmed(result || null);
+      setStep(3);
+    } catch (err) {
+      setError(err.message || "That payment didn't go through. You have not been charged.");
+    } finally {
+      setPaying(false);
+    }
   };
 
   const reset = () => {
-    setStep(0); setDate(null); setTime(""); setAgree(false);
+    if (api) api.reset();
+    setStep(0); setDate(null); setSlot(null); setAgree(false);
+    setBooking(null); setConfirmed(null); setError(""); setSlots([]);
     setData({ name:"", email:"", phone:"", weddingDate:"", purchased:"", designer:"", shop:"", work:[], timeline:"", notes:"" });
     onClose();
+  };
+
+  const back = () => {
+    setError("");
+    if (step === 0) return reset();
+    if (step === 2 && api) api.unmountPayment();
+    setStep(step - 1);
   };
 
   return (
@@ -353,15 +534,15 @@ const BookingFlow = ({ open, onClose }) => {
             <div className="bk-twocol">
               <div className="bk-col">
                 <h3 className="bk-h">Choose a date</h3>
-                <Calendar value={date} onChange={setDate} />
+                <Calendar value={date} onChange={setDate} openDays={openDays} />
               </div>
               <div className="bk-col">
                 <h3 className="bk-h">Choose a time</h3>
-                <Slots date={date} value={time} onChange={setTime} />
+                <Slots date={date} value={slot ? slot.label : ""} onChange={setSlot} slots={slots} loading={slotsLoading} />
                 <aside className="bk-aside">
                   <div className="bk-aside-row"><span>Appointment</span><span>Bridal Consultation</span></div>
                   <div className="bk-aside-row"><span>Length</span><span>30 minutes</span></div>
-                  <div className="bk-aside-row"><span>Booking fee</span><span>$25 + processing</span></div>
+                  <div className="bk-aside-row"><span>Booking fee</span><span>{money(pricing.feeCents)} + processing</span></div>
                   <div className="bk-aside-row"><span>Reschedule</span><span>1 allowed · 24 hr notice</span></div>
                 </aside>
               </div>
@@ -377,29 +558,46 @@ const BookingFlow = ({ open, onClose }) => {
               setAgree={setAgree}
               onPay={handlePay}
               paying={paying}
+              pricing={pricing}
+              live={paymentLive}
+              mountRef={payMountRef}
+              error={error}
             />
           )}
 
-          {step === 3 && <Confirmation summary={summary} onClose={reset} />}
+          {step === 3 && (
+            <Confirmation
+              summary={summary}
+              onClose={reset}
+              reference={confirmed && confirmed.reference}
+              calendarFailed={Boolean(confirmed && confirmed.calendarFailed)}
+              emailLive={emailLive}
+            />
+          )}
         </div>
 
         {step < 3 && (
           <footer className="bk-shell-foot">
-            <button className="btn btn-ghost" type="button" onClick={() => step === 0 ? reset() : setStep(step - 1)}>
+            <button className="btn btn-ghost" type="button" onClick={back}>
               {step === 0 ? "Cancel" : "Back"}
             </button>
-            {step < 2 && (
-              <button
-                className="btn btn-primary"
-                type="button"
-                disabled={(step === 0 && !canStep0) || (step === 1 && !canStep1)}
-                onClick={() => setStep(step + 1)}
-              >
+
+            {step === 0 && (
+              <button className="btn btn-primary" type="button" disabled={!canStep0} onClick={() => setStep(1)}>
                 Continue
               </button>
             )}
+
+            {step === 1 && (
+              <button className="btn btn-primary" type="button" disabled={!canStep1 || advancing} onClick={goToPayment}>
+                {advancing ? "Holding your time…" : "Continue"}
+              </button>
+            )}
+
             {step === 2 && (
-              <span className="bk-foot-note">Payment is processed by Stripe at the next step.</span>
+              <span className="bk-foot-note">
+                {error ? error : "Payment is processed by Stripe."}
+              </span>
             )}
           </footer>
         )}

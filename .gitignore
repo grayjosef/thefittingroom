@@ -20,3 +20,7 @@ build/
 
 # Windows NTFS metadata when copying from /Downloads in WSL
 *:Zone.Identifier
+
+# Local Cloudflare dev secrets — never commit
+.dev.vars
+.wrangler/

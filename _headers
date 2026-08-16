@@ -5,25 +5,47 @@
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self "https://js.stripe.com")
 
-# Cache static assets aggressively
-/*.css
-  Cache-Control: public, max-age=31536000, immutable
+# Images are effectively content-addressed — a new photo gets a new filename —
+# so these are safe to pin for a year.
 /*.png
   Cache-Control: public, max-age=31536000, immutable
 /*.jpg
   Cache-Control: public, max-age=31536000, immutable
 /*.svg
   Cache-Control: public, max-age=31536000, immutable
-
-# JSX files compiled in-browser via Babel — cache aggressively too
-/*.jsx
+/*.ico
   Cache-Control: public, max-age=31536000, immutable
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+# Code is NOT content-addressed. These filenames never change, so "immutable"
+# meant a returning visitor could run last year's JavaScript against this
+# year's API. no-cache still lets the browser keep a copy — it just has to
+# revalidate, which costs one 304 and nothing else.
+/*.css
+  Cache-Control: public, no-cache
+/*.js
+  Cache-Control: public, no-cache
+/*.jsx
+  Cache-Control: public, no-cache
   Content-Type: text/babel; charset=utf-8
 
-# Don't cache the HTML — let updates ship instantly
+# HTML always revalidates so deploys land immediately.
 /
   Cache-Control: public, max-age=0, must-revalidate
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# Private client records — keep out of search engines and caches
+/studio
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+/studio/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+# API responses are never cacheable
+/api/*
+  Cache-Control: no-store

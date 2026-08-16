@@ -1,0 +1,82 @@
+# Local development secrets for `npm run dev`.
+#
+# Copy to `.dev.vars` (git-ignored) and fill in what you have. In production
+# these same names go in Cloudflare → Pages → thefittingroom-gh → Settings →
+# Variables and secrets. Encrypt every one of them except SITE_URL.
+#
+# Nothing here is required. With the file absent the site runs in stub mode:
+# synthetic availability, no charge, designed placeholders throughout.
+# Check what's live at any time: http://localhost:3170/api/health
+
+
+# === GOOGLE ===============================================================
+# One-time OAuth against Catherine's personal Gmail. Publish the consent
+# screen to "In production" or the refresh token dies after seven days.
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
+GOOGLE_OAUTH_REFRESH_TOKEN=
+
+# Random string that gates the one-time connect flow at /api/google/start.
+# Generate: node -e "console.log(crypto.randomUUID())"
+GOOGLE_SETUP_TOKEN=
+
+# Calendar that receives consultations. "primary" = the connected account's own.
+GOOGLE_CALENDAR_ID=primary
+
+# Extra calendars that block availability but never receive events.
+# Comma separated. Use for anything personal she keeps elsewhere.
+GOOGLE_BUSY_CALENDAR_IDS=
+
+# The spreadsheet holding Clients / Appointments / Intake / Notes / Inquiries.
+# Create it on the same Google account, then take the ID out of the URL:
+#   docs.google.com/spreadsheets/d/<THIS PART>/edit
+# Tabs and headers are created automatically on first write.
+GOOGLE_SHEET_ID=
+
+
+# === STRIPE ===============================================================
+# Blank keeps the paywall stubbed. The booking flow still works end to end.
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+
+# From the webhook endpoint pointed at /api/stripe/webhook, subscribed to
+# payment_intent.succeeded and payment_intent.payment_failed.
+STRIPE_WEBHOOK_SECRET=
+
+
+# === PRICING ==============================================================
+# Cents. The processing figure is what makes Catherine whole at $25 after
+# Stripe's 2.9% + 30c. Change these and change the site copy to match.
+BOOKING_FEE_CENTS=2500
+BOOKING_PROCESSING_CENTS=105
+
+
+# === BOOKING RULES ========================================================
+BOOKING_SLOT_MINUTES=30
+BOOKING_BUFFER_MINUTES=0
+BOOKING_LEAD_HOURS=24
+BOOKING_MAX_DAYS_AHEAD=120
+BOOKING_HOLD_MINUTES=15
+STUDIO_TIMEZONE=America/Chicago
+
+# Studio hours, if they ever change. Keys are weekdays, 0 = Sunday.
+# STUDIO_HOURS_JSON={"2":[["10:00","11:30"],["13:00","14:30"],["15:00","16:30"]],"6":[["09:30","12:00"]]}
+
+
+# === STUDIO RECORDS (/studio) =============================================
+STUDIO_PASSWORD=
+# Generate: node -e "console.log(crypto.randomBytes(32).toString('hex'))"
+STUDIO_SESSION_SECRET=
+
+
+# === EMAIL ================================================================
+# Porkbun forwarding can receive but cannot send, so outbound needs a provider.
+RESEND_API_KEY=
+# Must be on a domain verified in Resend.
+NOTIFY_FROM=
+# Where booking and inquiry alerts land. Switch to inquiry@thefittingroom-gh.com
+# once that mailbox can receive. The calendar target is separate and never
+# changes — it's whichever account you connected above.
+NOTIFY_EMAIL=cateelizabeth1967@gmail.com
+
+SITE_URL=https://thefittingroom-gh.com

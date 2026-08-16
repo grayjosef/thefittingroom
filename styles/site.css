@@ -1331,3 +1331,34 @@ section + section { border-top: var(--rule-soft); }
 /* fade-in */
 .reveal { opacity: 0; transform: translateY(8px); transition: opacity 700ms ease, transform 700ms ease; }
 .reveal.in { opacity: 1; transform: none; }
+
+/* ---------------------------------------------------------------------------
+   Booking integration — styles for elements the live Stripe/API path adds.
+   Kept at the end so a Claude Design re-export of the block above stays clean.
+   --------------------------------------------------------------------------- */
+
+/* Stripe Payment Element mounts here in place of the placeholder card inputs. */
+.pay-element {
+  min-height: 240px;
+  margin: 6px 0 10px;
+}
+
+.pay-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #E8837B;
+  background: rgba(232, 131, 123, 0.08);
+  color: #F2B8B2;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* Days the studio calendar reports as full read the same as closed days. */
+.cal-cell.is-closed { cursor: default; }
+
+/* Contact form failure notice. */
+.contact-error {
+  margin: 10px 0 0;
+  color: #F2B8B2;
+  font-size: 13.5px;
+}

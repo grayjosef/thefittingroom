@@ -1,0 +1,15 @@
+{
+  "name": "thefittingroom-gh",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Fitting Room at Gray House — site, booking, and studio records",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev . --port 3170 --compatibility-date=2026-08-01",
+    "check": "node scripts/verify-wiring.mjs",
+    "deploy": "git push origin main"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

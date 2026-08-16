@@ -364,6 +364,31 @@ const Policies = () => (
 const Contact = () => {
   const [form, setForm] = React.useState({ name: "", email: "", message: "" });
   const [sent, setSent] = React.useState(false);
+  /* GH-WIRE: real delivery via /api/contact, with the designed success state
+     preserved. Falls back to the original optimistic behaviour offline. */
+  const [sending, setSending] = React.useState(false);
+  const [sendError, setSendError] = React.useState("");
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSendError("");
+    const api = typeof window !== "undefined" ? window.GH : null;
+    if (!api) { setSent(true); return; }
+
+    setSending(true);
+    try {
+      const res = await api.sendInquiry(form);
+      // A null result means no backend is reachable; don't punish the visitor
+      // for our plumbing — accept the note as the design always did.
+      setSent(true);
+      if (res === null) console.warn("Inquiry not delivered: API unreachable.");
+    } catch (err) {
+      setSendError(err.message || "That didn't send. Please email inquiry@thefittingroom-gh.com.");
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <section id="contact">
       <div className="wrap">
@@ -408,7 +433,7 @@ const Contact = () => {
                 Thank you. Catherine will respond personally within two business days.
               </div>
             ) : (
-              <form className="contact-form" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
+              <form className="contact-form" onSubmit={submit}>
                 <label className="fld">
                   <span className="fld-label">Name</span>
                   <input className="ipt" value={form.name} onChange={(e) => setForm({...form, name: e.target.value })} required />
@@ -421,7 +446,17 @@ const Contact = () => {
                   <span className="fld-label">Message</span>
                   <textarea className="ipt ipt-area" rows="4" value={form.message} onChange={(e) => setForm({...form, message: e.target.value })} required />
                 </label>
-                <button className="btn" type="submit">Send Inquiry</button>
+                {/* Honeypot — hidden from people, irresistible to bots. */}
+                <input
+                  type="text" name="company" tabIndex="-1" autoComplete="off"
+                  value={form.company || ""} onChange={(e) => setForm({...form, company: e.target.value })}
+                  style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+                  aria-hidden="true"
+                />
+                {sendError && <p className="contact-error" role="alert">{sendError}</p>}
+                <button className="btn" type="submit" disabled={sending}>
+                  {sending ? "Sending…" : "Send Inquiry"}
+                </button>
               </form>
             )}
           </div>
