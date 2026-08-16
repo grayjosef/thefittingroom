@@ -19,10 +19,45 @@ export const SCOPES = [
 // re-mint one every time.
 let cached = { token: null, expiresAt: 0 };
 
+// Where the refresh token lives when the connect flow stores it for us.
+export const KV_REFRESH_KEY = "google_refresh_token";
+export const KV_ACCOUNT_KEY = "google_account_email";
+
+// True when we have credentials AND somewhere a token could come from.
+// Not a promise that a token actually exists yet — see hasRefreshToken.
 export function googleConfigured(env) {
   return Boolean(
-    env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET && env.GOOGLE_OAUTH_REFRESH_TOKEN
+    env.GOOGLE_OAUTH_CLIENT_ID &&
+      env.GOOGLE_OAUTH_CLIENT_SECRET &&
+      (env.GOOGLE_OAUTH_REFRESH_TOKEN || env.TOKENS)
   );
+}
+
+// The refresh token itself. KV is the normal path — the connect flow writes it
+// there so it never has to be displayed, copied, or sent to anyone. The env var
+// remains supported for anyone who prefers to paste it by hand.
+export async function storedRefreshToken(env) {
+  if (env.GOOGLE_OAUTH_REFRESH_TOKEN) return env.GOOGLE_OAUTH_REFRESH_TOKEN;
+  if (!env.TOKENS) return null;
+  try {
+    return await env.TOKENS.get(KV_REFRESH_KEY);
+  } catch (err) {
+    console.error("Could not read the refresh token from KV:", err);
+    return null;
+  }
+}
+
+export async function hasRefreshToken(env) {
+  return Boolean(await storedRefreshToken(env));
+}
+
+export async function connectedAccount(env) {
+  if (!env.TOKENS) return null;
+  try {
+    return await env.TOKENS.get(KV_ACCOUNT_KEY);
+  } catch {
+    return null;
+  }
 }
 
 export async function accessToken(env) {
@@ -31,10 +66,13 @@ export async function accessToken(env) {
   const now = Date.now();
   if (cached.token && cached.expiresAt > now + 60_000) return cached.token;
 
+  const refresh = await storedRefreshToken(env);
+  if (!refresh) return null;
+
   const body = new URLSearchParams({
     client_id: env.GOOGLE_OAUTH_CLIENT_ID,
     client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-    refresh_token: env.GOOGLE_OAUTH_REFRESH_TOKEN,
+    refresh_token: refresh,
     grant_type: "refresh_token",
   });
 
@@ -76,7 +114,7 @@ export class GoogleApiError extends Error {
 // error text, which is far more useful than a bare status code.
 export async function googleFetch(env, url, init = {}) {
   const token = await accessToken(env);
-  if (!token) throw new GoogleAuthError("Google is not connected.");
+  if (!token) throw new GoogleAuthError("Google is not connected yet.");
 
   const res = await fetch(url, {
     ...init,

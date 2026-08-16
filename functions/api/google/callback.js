@@ -3,7 +3,7 @@
 // Shows the refresh token once so it can be pasted into Cloudflare. The token
 // is password-equivalent: it is never stored here and never logged.
 
-import { exchangeCode, tokenIdentity } from "../../_lib/google.js";
+import { KV_ACCOUNT_KEY, KV_REFRESH_KEY, exchangeCode, tokenIdentity } from "../../_lib/google.js";
 import { handler } from "../../_lib/http.js";
 
 function page(title, bodyHtml, status = 200) {
@@ -70,28 +70,50 @@ export const onRequestGet = handler(async ({ request, env }) => {
   }
 
   const who = await tokenIdentity(tokens.access_token);
-  const account = who?.email || "unknown account";
-  const expected = "cateelizabeth1967@gmail.com";
-  const mismatch = who?.email && who.email.toLowerCase() !== expected;
+  const account = who?.email || "";
+  const expected = (env.GOOGLE_EXPECTED_ACCOUNT || "cateelizabeth1967@gmail.com").toLowerCase();
+  const mismatch = account && account.toLowerCase() !== expected;
+
+  // Wrong account means every booking would land on the wrong calendar.
+  // Refuse rather than store it — the fix is to sign in as the right person.
+  if (mismatch) {
+    return page(
+      "Wrong account",
+      `<h1>That's the wrong Google account</h1>
+       <p>You approved as <strong>${account}</strong>, but appointments need to go to
+       <strong>${expected}</strong>. Nothing was saved.</p>
+       <p>Sign out of Google, sign back in as ${expected}, and open the link again.</p>
+       <p><a href="https://accounts.google.com/Logout">Sign out of Google</a></p>`,
+      400
+    );
+  }
+
+  // Store the token server-side. It is never displayed, so there is nothing to
+  // copy, nothing to send, and nothing to leak. This is the whole point of the
+  // KV binding — a refresh token is password-equivalent and should never make
+  // the trip through a text message or a screenshot.
+  if (!env.TOKENS) {
+    return page(
+      "Storage not connected",
+      `<h1>Almost — one setup step missing</h1>
+       <p>Google approved the connection, but there's nowhere to store it safely,
+       so it was discarded.</p>
+       <p>Bind a KV namespace called <code>TOKENS</code> to this Pages project, redeploy,
+       then open the link again.</p>`,
+      503
+    );
+  }
+
+  await env.TOKENS.put(KV_REFRESH_KEY, tokens.refresh_token);
+  if (account) await env.TOKENS.put(KV_ACCOUNT_KEY, account);
 
   return page(
     "Calendar connected",
-    `<h1>Calendar connected</h1>
-     <p>Signed in as <strong>${account}</strong>.</p>
-     ${mismatch ? `<div class="warn"><strong>Wrong account.</strong> Bookings must go to
-       <code>${expected}</code>. Sign out of Google, sign back in as that account, and open the
-       setup link again — otherwise appointments land on the wrong calendar.</div>` : ``}
-     <div>
-       <span class="lbl">Paste this into Cloudflare as GOOGLE_OAUTH_REFRESH_TOKEN</span>
-       <div class="tok" id="tok">${tokens.refresh_token}</div>
-     </div>
-     <button onclick="navigator.clipboard.writeText(document.getElementById('tok').textContent.trim()).then(()=>{this.textContent='Copied'})">Copy</button>
-     <div class="warn">
-       <p style="color:inherit"><strong>Treat this like a password.</strong> It grants calendar
-       access without signing in again. Paste it straight into Cloudflare → Pages → Settings →
-       Variables and secrets, as an encrypted value. Don't send it over text or email.</p>
-     </div>
-     <p>Once it's saved, redeploy and check <a href="/api/health">/api/health</a> —
-     <code>google</code> should be listed under live.</p>`
+    `<h1>All set — your calendar is connected.</h1>
+     <p>Connected as <strong>${account || "your Google account"}</strong>.</p>
+     <p>Appointments booked on the website will now appear on your calendar
+     automatically, and nobody can book a time you're already busy.</p>
+     <p>There's nothing to copy and nothing to send. You can close this page.</p>
+     <p style="margin-top:24px"><a href="${(env.SITE_URL || "https://thefittingroom-gh.com")}">Back to the website</a></p>`
   );
 });
