@@ -183,10 +183,30 @@ export async function exchangeCode(env, { code, redirectUri }) {
   return data;
 }
 
+// Which account a token belongs to.
+//
+// userinfo needs the "email" scope, which this app deliberately doesn't request
+// — asking a nervous person for their identity on top of their calendar is a
+// worse consent screen for no benefit. So fall back to the Calendar API, where
+// a personal Google account's primary calendar id IS its email address. That
+// uses the calendar scope we already hold.
+//
+// This matters: without it the wrong-account guard silently never fires, and a
+// consent granted by the wrong person would be stored and start writing
+// bookings to a stranger's calendar.
 export async function tokenIdentity(accessTokenValue) {
-  const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-    headers: { authorization: `Bearer ${accessTokenValue}` },
-  });
-  if (!res.ok) return null;
-  return res.json().catch(() => null);
+  const auth = { authorization: `Bearer ${accessTokenValue}` };
+
+  const info = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: auth })
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
+  if (info?.email) return info;
+
+  const cal = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary", {
+    headers: auth,
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
+
+  return cal?.id ? { email: cal.id, source: "calendar" } : null;
 }

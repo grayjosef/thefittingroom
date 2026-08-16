@@ -37,7 +37,12 @@ export const onRequestGet = handler(async ({ env }) => {
     google: {
       tokenStorage: env.TOKENS ? "kv" : env.GOOGLE_OAUTH_REFRESH_TOKEN ? "env" : "none",
       connected: tokenPresent,
+      // Recorded at connect time. If it's null on an otherwise-working
+      // connection, the account was recorded before identity lookup worked —
+      // reconnect to fill it in, or confirm by booking a test appointment and
+      // seeing which calendar it lands on.
       account: (await connectedAccount(env)) || null,
+      calendarId: config.calendarId,
     },
     notes: stubbed.length
       ? `Stubbed: ${stubbed.join(", ")}. The site still works; these fall back to designed placeholders.`

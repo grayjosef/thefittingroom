@@ -76,18 +76,19 @@ export function loadConfig(env = {}) {
 // Which integrations are actually live. Drives /api/health and lets every
 // endpoint degrade to a designed stub instead of erroring.
 export function capabilities(env = {}) {
+  // The refresh token normally lives in KV, written by the connect flow, so a
+  // bound TOKENS namespace counts as a valid source. Whether a token is
+  // actually present is a separate question — /api/health resolves that
+  // asynchronously and narrows these before reporting.
+  const googleCreds = Boolean(
+    env.GOOGLE_OAUTH_CLIENT_ID &&
+      env.GOOGLE_OAUTH_CLIENT_SECRET &&
+      (env.GOOGLE_OAUTH_REFRESH_TOKEN || env.TOKENS)
+  );
+
   return {
-    google: Boolean(
-      env.GOOGLE_OAUTH_CLIENT_ID &&
-        env.GOOGLE_OAUTH_CLIENT_SECRET &&
-        env.GOOGLE_OAUTH_REFRESH_TOKEN
-    ),
-    sheets: Boolean(
-      env.GOOGLE_SHEET_ID &&
-        env.GOOGLE_OAUTH_CLIENT_ID &&
-        env.GOOGLE_OAUTH_CLIENT_SECRET &&
-        env.GOOGLE_OAUTH_REFRESH_TOKEN
-    ),
+    google: googleCreds,
+    sheets: Boolean(env.GOOGLE_SHEET_ID && googleCreds),
     stripe: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PUBLISHABLE_KEY),
     stripeWebhook: Boolean(env.STRIPE_WEBHOOK_SECRET),
     email: Boolean(env.RESEND_API_KEY && env.NOTIFY_FROM),
