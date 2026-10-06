@@ -141,6 +141,64 @@ const AddClient = ({ onAdded, onCancel }) => {
   );
 };
 
+// ---------- calendar self-test ----------
+// Proves the two things Catherine actually cares about: appointments land on
+// her calendar, and anything already on it stops a bride booking that time.
+const CalendarCheck = () => {
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const run = async () => {
+    setBusy(true); setError(''); setResult(null);
+    try {
+      setResult(await api('/api/studio/calendar-test', { method: 'POST' }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="st-panel" style={{ marginBottom: 20 }}>
+      <div className="st-panel-head">
+        <span className="st-eyebrow">Calendar check</span>
+      </div>
+      <p style={{ margin: 0, color: 'var(--slate)', fontSize: 14.5 }}>
+        Writes a test appointment to the studio calendar, confirms the time stops being
+        offered, then deletes it. Nothing is charged and nothing is left behind.
+      </p>
+      <div className="st-inline">
+        <button className="st-btn is-primary" type="button" onClick={run} disabled={busy}>
+          {busy ? 'Checking…' : 'Run check'}
+        </button>
+      </div>
+
+      {error && <div className="st-error" style={{ marginTop: 12 }}>{error}</div>}
+
+      {result && (
+        <div style={{ marginTop: 16 }}>
+          <p style={{ margin: '0 0 12px', color: result.ok ? 'var(--slate-deep)' : '#F2B8B2', fontSize: 15 }}>
+            {result.summary}
+          </p>
+          {result.testedSlot && (
+            <p style={{ margin: '0 0 12px', color: 'var(--taupe)', fontSize: 13 }}>
+              Tested against {result.testedSlot}
+            </p>
+          )}
+          {(result.steps || []).map((s, i) => (
+            <div key={i} className="st-appt">
+              <span className="st-appt-when">{s.ok ? '✓' : '✗'} {s.step}</span>
+              <span className={'st-appt-meta' + (s.ok ? '' : ' is-alert')}>{s.detail}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ---------- dossier ----------
 const Dossier = ({ clientId, onChanged }) => {
   const [data, setData] = useState(null);
@@ -415,6 +473,8 @@ const App = () => {
             credentials, then redeploy — bookings will start filing themselves here.
           </div>
         )}
+
+        <CalendarCheck />
 
         {adding && (
           <AddClient
