@@ -199,6 +199,76 @@ const CalendarCheck = () => {
   );
 };
 
+// ---------- paid-but-unbooked recovery ----------
+// A booking is finalized by the browser after the card clears, and again by
+// the Stripe webhook. If neither lands, she has been charged and has no
+// appointment, and nothing anywhere says so. This surfaces that.
+const Reconcile = () => {
+  const [scan, setScan] = useState(null);
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
+
+  const check = async () => {
+    setBusy('check'); setError(''); setScan(null);
+    try { setScan(await api('/api/studio/reconcile')); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(''); }
+  };
+
+  const repair = async () => {
+    setBusy('repair'); setError('');
+    try { setScan(await api('/api/studio/reconcile', { method: 'POST' })); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(''); }
+  };
+
+  const owed = scan && (scan.paidButNotBooked || 0);
+  const rows = (scan && (scan.repairs || scan.rows)) || [];
+
+  return (
+    <div className="st-panel" style={{ marginBottom: 20 }}>
+      <div className="st-panel-head">
+        <span className="st-eyebrow">Paid but not booked</span>
+        {owed > 0 && <span className="st-count" style={{ color: 'var(--blush)' }}>{owed} needs attention</span>}
+      </div>
+      <p style={{ margin: 0, color: 'var(--slate)', fontSize: 14.5 }}>
+        Finds brides whose card was charged but whose appointment never reached the calendar,
+        and finishes them.
+      </p>
+      <div className="st-inline">
+        <button className="st-btn" type="button" onClick={check} disabled={!!busy}>
+          {busy === 'check' ? 'Checking…' : 'Check'}
+        </button>
+        {owed > 0 && (
+          <button className="st-btn is-primary" type="button" onClick={repair} disabled={!!busy}>
+            {busy === 'repair' ? 'Fixing…' : 'Fix ' + owed + ' booking' + (owed === 1 ? '' : 's')}
+          </button>
+        )}
+      </div>
+
+      {error && <div className="st-error" style={{ marginTop: 12 }}>{error}</div>}
+
+      {scan && (
+        <div style={{ marginTop: 14 }}>
+          <p style={{ margin: '0 0 10px', fontSize: 15, color: owed ? '#F2B8B2' : 'var(--slate-deep)' }}>
+            {scan.summary}
+          </p>
+          {rows.map((r) => (
+            <div key={r.appointmentId} className="st-appt">
+              <span className="st-appt-when">
+                {r.name} · {r.dateLabel} {r.timeLabel}
+              </span>
+              <span className={'st-appt-meta' + (r.paidButNotBooked || r.action === 'flagged' ? ' is-alert' : '')}>
+                {r.detail || (r.paidButNotBooked ? 'PAID — not on calendar' : 'abandoned, unpaid')}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ---------- dossier ----------
 const Dossier = ({ clientId, onChanged }) => {
   const [data, setData] = useState(null);
@@ -474,6 +544,7 @@ const App = () => {
           </div>
         )}
 
+        <Reconcile />
         <CalendarCheck />
 
         {adding && (

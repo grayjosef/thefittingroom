@@ -142,3 +142,20 @@ export async function verifyWebhook(rawBody, signatureHeader, secret, toleranceS
 
   return JSON.parse(rawBody);
 }
+
+// Find a PaymentIntent by the appointment it belongs to.
+//
+// Needed for recovery: an appointment only records its stripeRef once it has
+// been finalized, so a booking that was paid but never finalized has no link
+// back to its payment. The metadata written at creation time is the only
+// thread back, and Stripe's search index is how to pull it.
+export async function findPaymentIntentForAppointment(env, appointmentId) {
+  const query = encodeURIComponent(`metadata['appointmentId']:'${appointmentId}'`);
+  const data = await stripeFetch(env, `/payment_intents/search?query=${query}&limit=5`, {
+    method: "GET",
+  });
+  const intents = data?.data || [];
+  // Prefer a succeeded one; a failed attempt followed by a successful retry is
+  // a normal shape and the successful one is the truth.
+  return intents.find((i) => i.status === "succeeded") || intents[0] || null;
+}
