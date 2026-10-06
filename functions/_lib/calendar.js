@@ -4,17 +4,54 @@ import { googleFetch } from "./google.js";
 
 const API = "https://www.googleapis.com/calendar/v3";
 
-// Every calendar that should block availability. The booking calendar counts
-// as busy too — a confirmed consultation must not be offered twice.
-export function busySources(config) {
-  return [config.calendarId, ...config.busyCalendarIds].filter(
-    (id, i, all) => id && all.indexOf(id) === i
-  );
+// Every calendar that should block availability.
+//
+// Catherine keeps commitments on more than one calendar — she owns a "Family"
+// calendar as well as her main one — and a bride booking over a day already
+// spoken for is the exact failure this prevents. So rather than making someone
+// enumerate calendar ids by hand, discover them.
+//
+// Owned and writable calendars count as hers and block bookings. Read-only
+// subscriptions deliberately do not: the US holiday feed would otherwise close
+// the studio on every minor observance, and an old shared work calendar would
+// block time that isn't really busy.
+//
+// Events are still WRITTEN to exactly one calendar (config.calendarId).
+// Block on many, write to one.
+let calendarCache = { ids: null, at: 0 };
+const CALENDAR_TTL_MS = 10 * 60 * 1000;
+
+export async function busySources(env, config) {
+  const configured = [config.calendarId, ...config.busyCalendarIds].filter(Boolean);
+  const dedupe = (list) => list.filter((id, i, all) => id && all.indexOf(id) === i);
+
+  if (config.busyAllCalendars === false) return dedupe(configured);
+
+  const now = Date.now();
+  if (!calendarCache.ids || now - calendarCache.at > CALENDAR_TTL_MS) {
+    try {
+      const all = await listCalendars(env);
+      calendarCache = {
+        ids: all
+          .filter((c) => c.accessRole === "owner" || c.accessRole === "writer")
+          .map((c) => c.id),
+        at: now,
+      };
+    } catch (err) {
+      // Never quietly narrow to just the primary calendar — that reports time
+      // as free which the studio has not actually got.
+      console.error("Could not list calendars; blocking on configured ones only:", err.message);
+      calendarCache = { ids: null, at: 0 };
+      return dedupe(configured);
+    }
+  }
+
+  return dedupe([...configured, ...(calendarCache.ids || [])]);
 }
 
 // Returns [{ start: Date, end: Date }] across every watched calendar.
 export async function freeBusy(env, config, timeMin, timeMax) {
-  const items = busySources(config).map((id) => ({ id }));
+  const items = (await busySources(env, config)).map((id) => ({ id }));
   if (!items.length) return [];
 
   const data = await googleFetch(env, `${API}/freeBusy`, {

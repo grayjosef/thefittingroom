@@ -61,6 +61,9 @@ export function loadConfig(env = {}) {
 
     calendarId: env.GOOGLE_CALENDAR_ID || "primary",
     busyCalendarIds: list(env.GOOGLE_BUSY_CALENDAR_IDS),
+    // Every calendar she owns blocks bookings, discovered automatically.
+    // Set GOOGLE_BUSY_ALL_CALENDARS=false to go back to the listed ones only.
+    busyAllCalendars: String(env.GOOGLE_BUSY_ALL_CALENDARS ?? "true").toLowerCase() !== "false",
     sheetId: env.GOOGLE_SHEET_ID || "",
 
     appointmentTitle: env.BOOKING_EVENT_TITLE || "Bridal Consultation",

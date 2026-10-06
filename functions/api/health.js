@@ -3,7 +3,7 @@
 
 import { capabilities, loadConfig } from "../_lib/config.js";
 import { connectedAccount, hasRefreshToken } from "../_lib/google.js";
-import { listCalendars, resolveCalendar } from "../_lib/calendar.js";
+import { busySources, listCalendars, resolveCalendar } from "../_lib/calendar.js";
 import { handler, json } from "../_lib/http.js";
 
 export const onRequestGet = handler(async ({ env }) => {
@@ -54,6 +54,10 @@ export const onRequestGet = handler(async ({ env }) => {
       // Every calendar the connected account can see. If appointments "are not
       // showing up", this reveals whether she is reading a different calendar
       // than the one being written to.
+      // The calendars that actually stop a bride booking a time.
+      blocksOn: tokenPresent
+        ? await busySources(env, config).catch((e) => ({ error: e.message }))
+        : null,
       visibleCalendars: tokenPresent
         ? await listCalendars(env).catch((e) => ({ error: e.message }))
         : null,
