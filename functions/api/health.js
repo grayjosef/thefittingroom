@@ -3,6 +3,7 @@
 
 import { capabilities, loadConfig } from "../_lib/config.js";
 import { connectedAccount, hasRefreshToken } from "../_lib/google.js";
+import { listCalendars, resolveCalendar } from "../_lib/calendar.js";
 import { handler, json } from "../_lib/http.js";
 
 export const onRequestGet = handler(async ({ env }) => {
@@ -43,6 +44,19 @@ export const onRequestGet = handler(async ({ env }) => {
       // seeing which calendar it lands on.
       account: (await connectedAccount(env)) || null,
       calendarId: config.calendarId,
+      // Resolved live from Google. config.calendarId is normally the literal
+      // string "primary", which says nothing about WHOSE calendar that is —
+      // so a token granted by the wrong account looked identical to a correct
+      // one. This is the check that was missing.
+      writesTo: tokenPresent
+        ? await resolveCalendar(env, config).catch((e) => ({ error: e.message }))
+        : null,
+      // Every calendar the connected account can see. If appointments "are not
+      // showing up", this reveals whether she is reading a different calendar
+      // than the one being written to.
+      visibleCalendars: tokenPresent
+        ? await listCalendars(env).catch((e) => ({ error: e.message }))
+        : null,
     },
     notes: stubbed.length
       ? `Stubbed: ${stubbed.join(", ")}. The site still works; these fall back to designed placeholders.`

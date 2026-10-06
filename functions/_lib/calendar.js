@@ -87,3 +87,36 @@ export async function deleteEvent(env, config, eventId) {
     if (err?.status !== 404 && err?.status !== 410) throw err;
   }
 }
+
+// Which calendar we are ACTUALLY writing to.
+//
+// config.calendarId is usually the literal string "primary", which resolves
+// against whichever account the stored token belongs to — so the config alone
+// cannot tell you whose calendar receives bookings. Asking Google resolves it:
+// for a personal account the primary calendar's id IS the email address.
+//
+// This is the check that was missing. Without it, a token granted by the wrong
+// Google account looks identical to a correct one, and bookings land somewhere
+// nobody is looking.
+export async function resolveCalendar(env, config) {
+  const data = await googleFetch(
+    env,
+    `${API}/calendars/${encodeURIComponent(config.calendarId)}`
+  );
+  if (!data) return null;
+  return { id: data.id || null, summary: data.summary || null, timeZone: data.timeZone || null };
+}
+
+// Every calendar the connected account can see, and what access it has to each.
+// Useful when appointments "aren't showing up": it reveals whether the account
+// has several calendars and we're writing to a different one than she reads.
+export async function listCalendars(env) {
+  const data = await googleFetch(env, `${API}/users/me/calendarList?maxResults=50&minAccessRole=reader`);
+  return (data?.items || []).map((c) => ({
+    id: c.id,
+    summary: c.summary,
+    primary: Boolean(c.primary),
+    accessRole: c.accessRole,
+    selected: Boolean(c.selected),
+  }));
+}
