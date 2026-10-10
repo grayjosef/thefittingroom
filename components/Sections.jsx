@@ -11,7 +11,7 @@ const Header = ({ onBook, onMenu }) => (
   <header className="site-header">
     <div className="site-header-inner">
       <div className="nav-brand">
-        <a href="#top" aria-label="The Fitting Room at Gray House — Home">
+        <a href="#top" aria-label="The Fitting Room at Gray House , Home">
           <LogoImg width={240} />
         </a>
       </div>
@@ -130,12 +130,12 @@ const Quiet = () => (
           </p>
           <p>
             Brides bring valuable, sentimental garments into this studio. Catherine treats them
-            accordingly — with patience, precision, and a quiet confidence earned over decades.
+            accordingly , with patience, precision, and a quiet confidence earned over decades.
           </p>
         </div>
         <div className="split-art">
           <figure className="atelier-frame">
-            <img src="assets/studio-detail.png" alt="Studio detail — linen, pins, and spring branches" />
+            <img src="assets/studio-detail.png" alt="Studio detail , linen, pins, and spring branches" />
           </figure>
         </div>
       </div>
@@ -180,7 +180,7 @@ const Services = ({ onBook }) => (
         <h2 className="h-display">A studio practice<br/><em>built around the gown.</em></h2>
         <p>
           Every dress carries its own structure, fabric, timeline, and story. The work below is
-          chosen to suit your gown — never the other way around.
+          chosen to suit your gown , never the other way around.
         </p>
       </div>
 
@@ -373,15 +373,16 @@ const Contact = () => {
     e.preventDefault();
     setSendError("");
     const api = typeof window !== "undefined" ? window.GH : null;
-    if (!api) { setSent(true); return; }
+    if (!api) { setSendError("Our form isn't reaching us right now. Please email inquiry@thefittingroom-gh.com directly."); return; }
 
     setSending(true);
     try {
       const res = await api.sendInquiry(form);
-      // A null result means no backend is reachable; don't punish the visitor
-      // for our plumbing — accept the note as the design always did.
-      setSent(true);
-      if (res === null) console.warn("Inquiry not delivered: API unreachable.");
+      if (res === null) {
+        setSendError("Our form isn't reaching us right now. Please email inquiry@thefittingroom-gh.com directly.");
+      } else {
+        setSent(true);
+      }
     } catch (err) {
       setSendError(err.message || "That didn't send. Please email inquiry@thefittingroom-gh.com.");
     } finally {
@@ -413,7 +414,7 @@ const Contact = () => {
               My work is to listen, then <em>fit it gently</em> to yours.
               <span className="close-quote">&rdquo;</span>
             </p>
-            <div className="contact-banner-sig">— Catherine Gray</div>
+            <div className="contact-banner-sig">, Catherine Gray</div>
           </figcaption>
         </figure>
 
@@ -421,7 +422,7 @@ const Contact = () => {
           <div className="contact-card">
             <div className="contact-row"><div className="lbl">Studio</div><div className="val">Stevens Point, Wisconsin<br/><span style={{ color: "var(--taupe)" }}>Appointment-only address shared at confirmation</span></div></div>
             <div className="contact-row"><div className="lbl">Email</div><div className="val">inquiry@thefittingroom-gh.com</div></div>
-            <div className="contact-row"><div className="lbl">Hours</div><div className="val">Tue – Sat · By appointment</div></div>
+            <div className="contact-row"><div className="lbl">Hours</div><div className="val">Tue - Sat · By appointment</div></div>
             <div className="contact-row"><div className="lbl">Service area</div><div className="val">Stevens Point · Central Wisconsin</div></div>
           </div>
 
@@ -446,7 +447,7 @@ const Contact = () => {
                   <span className="fld-label">Message</span>
                   <textarea className="ipt ipt-area" rows="4" value={form.message} onChange={(e) => setForm({...form, message: e.target.value })} required />
                 </label>
-                {/* Honeypot — hidden from people, irresistible to bots. */}
+                {/* Honeypot , hidden from people, irresistible to bots. */}
                 <input
                   type="text" name="company" tabIndex="-1" autoComplete="off"
                   value={form.company || ""} onChange={(e) => setForm({...form, company: e.target.value })}
@@ -524,7 +525,7 @@ const Footer = () => (
       </div>
     </div>
 
-    {/* Bull City Systems signature — under everything */}
+    {/* Bull City Systems signature , under everything */}
     <div className="bcs-sig-light" style={{ borderTop: "1px solid rgba(58, 66, 80, 0.12)", marginTop: 12 }}>
       <BCSignature />
     </div>

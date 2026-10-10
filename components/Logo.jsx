@@ -2,7 +2,7 @@
 // On a SLATE background we invert the PNG so the ink becomes ivory and the
 // plate dissolves via screen blend.
 
-const LogoImg = ({ width = 780, alt = "The Fitting Room at Gray House — Bridal Alterations & Custom Sewing", style = {} }) => (
+const LogoImg = ({ width = 780, alt = "The Fitting Room at Gray House , Bridal Alterations & Custom Sewing", style = {} }) => (
   <img
     src="assets/gray-house-logo-ivory.png"
     alt={alt}
@@ -16,7 +16,7 @@ const LogoImg = ({ width = 780, alt = "The Fitting Room at Gray House — Bridal
   />
 );
 
-// Same — for footer / dark-on-dark contexts (kept for API compatibility)
+// Same , for footer / dark-on-dark contexts (kept for API compatibility)
 const LogoImgInverted = LogoImg;
 
 window.LogoImg = LogoImg;

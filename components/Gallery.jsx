@@ -1,5 +1,5 @@
 // =====================================================================
-// GALLERY — editorial auto-flow grid for The Fitting Room at Gray House.
+// GALLERY , editorial auto-flow grid for The Fitting Room at Gray House.
 //
 // Reads from window.GALLERY_ITEMS (defined in components/gallery-items.js).
 // - Supports single images and before/after pairs in the same grid
@@ -14,7 +14,7 @@ const Gallery = () => {
   const items = (typeof window !== "undefined" && window.GALLERY_ITEMS) || [];
   const [lightbox, setLightbox] = useState(null); // { item, side: "before"|"after"|null }
 
-  // Auto-hide if too few items configured — design needs at least 4 to feel intentional
+  // Auto-hide if too few items configured , design needs at least 4 to feel intentional
   if (items.length < 4) return null;
 
   // Close lightbox on Escape
@@ -42,7 +42,7 @@ const Gallery = () => {
           <h2 className="h-display">A close look<br/><em>at the work itself.</em></h2>
           <p className="lede" style={{ marginTop: 18 }}>
             A small selection of recent gowns and details from the studio. Each piece reflects
-            the same patient, hands-on approach — fitted, finished, and returned to the bride.
+            the same patient, hands-on approach , fitted, finished, and returned to the bride.
           </p>
         </div>
 

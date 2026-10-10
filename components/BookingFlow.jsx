@@ -1,4 +1,4 @@
-// Multi-step booking flow — calendar slot, intake form, payment screen, confirmation.
+// Multi-step booking flow , calendar slot, intake form, payment screen, confirmation.
 //
 // The layout, copy and class names here are the Claude Design export and should
 // keep matching it. What has been added is data plumbing, marked GH-WIRE, which
@@ -146,7 +146,7 @@ const Slots = ({ date, value, onChange, slots, loading }) => {
   return (
     <div className="slots">
       <div className="slots-head">
-        <span className="slots-eyebrow">Available — 30 min</span>
+        <span className="slots-eyebrow">Available , 30 min</span>
         <span className="slots-date">{date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</span>
       </div>
       <div className="slots-grid">
@@ -242,7 +242,7 @@ const PaymentScreen = ({ summary, agree, setAgree, onPay, paying, pricing, live,
         <div><dt>With</dt><dd>Catherine Gray</dd></div>
         <div><dt>Date</dt><dd>{summary.dateLabel}</dd></div>
         <div><dt>Time</dt><dd>{summary.time}</dd></div>
-        <div><dt>For</dt><dd>{summary.name || "—"}</dd></div>
+        <div><dt>For</dt><dd>{summary.name || ","}</dd></div>
       </dl>
 
       <div className="pay-rule" />
@@ -280,7 +280,7 @@ const PaymentScreen = ({ summary, agree, setAgree, onPay, paying, pricing, live,
               <select className="ipt" disabled><option>United States</option></select>
             </Field>
           </div>
-          <p className="pay-note">Card payment isn't switched on yet — reserving will hold your time without charge.</p>
+          <p className="pay-note">Card payment isn't switched on yet , reserving will hold your time without charge.</p>
         </React.Fragment>
       )}
 
@@ -425,8 +425,8 @@ const BookingFlow = ({ open, onClose }) => {
   if (!open) return null;
 
   const summary = {
-    dateLabel: date ? date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : "—",
-    time: slot ? slot.label : "—",
+    dateLabel: date ? date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : ",",
+    time: slot ? slot.label : ",",
     name: data.name,
     email: data.email,
   };
