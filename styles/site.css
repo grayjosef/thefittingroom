@@ -980,11 +980,17 @@ section + section { border-top: var(--rule-soft); }
   h2.h-display { font-size: clamp(30px, 4.6vw, 48px); }
   .lede { font-size: 18px; }
   .accepting-line { font-size: clamp(20px, 2.8vw, 26px); }
-  .about-card { grid-template-columns: 200px 1fr; }
   .book-grid { gap: 36px; }
   .policy-text { grid-template-columns: 1fr; padding: clamp(28px, 4vw, 44px); }
   .contact-banner { grid-template-columns: 1fr; }
   .contact-banner-img img { aspect-ratio: 16 / 9; object-position: 30% 30%; }
+}
+/* About card, tablet band only: narrower portrait column. This must stay out
+   of the <=1080 bridge above and out of phone widths: at <=720px the card
+   stacks (see the mobile corrections at the end of this file), and a
+   full-width cascade from the bridge used to defeat that stack. */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .about-card { grid-template-columns: 200px 1fr; }
 }
 @media (max-width: 880px) {
   section { padding: clamp(48px, 8vw, 72px) 0; }
@@ -1361,4 +1367,48 @@ section + section { border-top: var(--rule-soft); }
   margin: 10px 0 0;
   color: #F2B8B2;
   font-size: 13.5px;
+}
+
+/* ---------------------------------------------------------------------------
+   Mobile corrections (2026-10-22) — appended last on purpose: at equal
+   specificity the later rule wins, and the small-screen rules in the body of
+   this file sit ABOVE wider breakpoints that used to override them (the
+   About card's <=1080 "200px 1fr" bridge crushed its text column to ~30%
+   on phones because the <=720 stack rule came earlier in the file).
+   --------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  /* About: portrait stacks full-width above the text; text gets the
+     card's full content width instead of a ~70px strip. */
+  .about-card { grid-template-columns: 1fr; }
+  .catherine-portrait { min-height: 0; }
+
+  /* Booking stepper: four full labels cannot fit a phone-width modal.
+     Keep the step numbers for every step, label only the active one. */
+  .bk-stepper { gap: 6px; padding: 14px 18px; }
+  .bk-step { gap: 6px; }
+  .bk-step-label { display: none; }
+  .bk-step.is-active .bk-step-label { display: inline; }
+
+  /* Hamburger gets a real tap target (was ~34px tall). */
+  .mobile-toggle {
+    min-width: 40px; min-height: 40px;
+    align-items: center; justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Header lockup (240px inline width) + 32px grid gap + hamburger
+     overflowed phone widths under ~375px; shrink the lockup. */
+  .nav-brand img { width: 200px !important; height: auto; }
+
+  /* About card: trade a little frame padding for text width. */
+  .about-card { padding: 24px 20px; }
+
+  /* Booking modal: use the whole small screen, let the footer wrap
+     instead of squeezing the note against the buttons. */
+  .bk-overlay { padding: 10px; }
+  .bk-shell { max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); }
+  .bk-shell-head, .bk-shell-foot { padding: 14px 16px; }
+  .bk-shell-foot { flex-wrap: wrap; }
+  .cal-nav { width: 38px; height: 38px; }
 }
