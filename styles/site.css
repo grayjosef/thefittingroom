@@ -1776,3 +1776,19 @@ body{background:#20262F}
 /* hero now image-left, copy-right; quiet flips right to keep the rhythm alternating */
 .hero.bleed .bleed-art img{object-position:72% 40%}
 #quiet .bleed-art img{object-position:55% 50%}
+
+/* ===== Pass 4 (2026-10-28): fluid width. Content runs to the screen edges,
+   bleed copy centers between the photo's faded edge and the screen edge ===== */
+:root{--max:1920px;--gutter:clamp(24px,4.5vw,88px)}
+.site-header-inner{max-width:var(--max)}
+#top{--art-w:56%}#quiet{--art-w:52%}#about{--art-w:50%}
+.bleed .bleed-art{width:var(--art-w)}
+.bleed>.wrap{max-width:none;padding:0;display:flex}
+.bleed-left>.wrap{padding-left:var(--art-w);padding-right:var(--gutter)}
+.bleed-right>.wrap{padding-right:var(--art-w);padding-left:var(--gutter)}
+.bleed-copy,.bleed-left .bleed-copy{width:100%;max-width:620px;margin:0 auto;padding:0 clamp(20px,2.5vw,48px)}
+@media (max-width:880px){
+  .bleed>.wrap{display:block;padding:0 var(--gutter)}
+  .bleed-copy,.bleed-left .bleed-copy{max-width:none;margin:-56px 0 0;padding:0}
+}
+@media (min-width:881px) and (max-width:1100px){.hero .hero-h1{font-size:clamp(32px,3.6vw,44px)}}
