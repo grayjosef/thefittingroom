@@ -536,7 +536,7 @@ const MobileDrawer = ({ open, onClose, onBook }) => {
         </span>
       </div>
       <div className="m-drawer-head">
-        <span className="eyebrow">Menu</span>
+        <span className="m-drawer-title">Menu</span>
         <button className="m-drawer-close" type="button" onClick={close} aria-label="Close menu">×</button>
       </div>
       <nav className="m-drawer-nav">
@@ -549,7 +549,10 @@ const MobileDrawer = ({ open, onClose, onBook }) => {
       </nav>
       <div className="m-drawer-foot">
         <button className="btn" type="button" onClick={() => { close(); onBook(); }}>Reserve Appointment</button>
-        <a className="m-drawer-mail" href="mailto:inquiry@thefittingroom-gh.com">inquiry@thefittingroom-gh.com</a>
+        <div className="m-drawer-inq">
+          <span className="eyebrow">Inquiries</span>
+          <a className="m-drawer-mail" href="mailto:inquiry@thefittingroom-gh.com">inquiry@thefittingroom-gh.com</a>
+        </div>
       </div>
     </aside>
   );
