@@ -42,7 +42,7 @@ const Gallery = () => {
           <h2 className="h-display">A close look<br/><em>at the work itself.</em></h2>
           <p className="lede" style={{ marginTop: 18 }}>
             A small selection of recent gowns and details from the studio. Each piece reflects
-            the same patient, hands-on approach , fitted, finished, and returned to the bride.
+            the same patient, hands-on approach: fitted, finished, and returned to the bride.
           </p>
         </div>
 

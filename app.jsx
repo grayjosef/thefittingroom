@@ -18,10 +18,10 @@ const App = () => {
 
   return (
     <React.Fragment>
-      <Header onBook={openBooking} onMenu={() => setDrawerOpen(true)} />
+      <div className={`page-shell ${drawerOpen ? "is-shifted" : ""}`} onClick={drawerOpen ? () => setDrawerOpen(false) : undefined}>
+      <Header onBook={openBooking} onMenu={() => setDrawerOpen(o => !o)} menuOpen={drawerOpen} />
       <main>
         <Hero onBook={openBooking} />
-        <NowAccepting />
         <Trust />
         <Quiet />
         <Services onBook={openBooking} />
@@ -32,6 +32,7 @@ const App = () => {
         <Contact />
       </main>
       <Footer />
+      </div>
 
       <div className="mobile-cta-bar">
         <button className="btn" type="button" onClick={openBooking}>Book a Bridal Consultation</button>
