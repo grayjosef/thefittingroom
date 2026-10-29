@@ -25,7 +25,7 @@
  * Styling: include bcs-signature.css alongside this file.
  * ===================================================================== */
 
-const BULL_SRC = "assets/bcs-bull-cream.png";
+const BULL_SRC = "assets/bcs-powered-bull.png";
 
 function BCSignature() {
   return (
