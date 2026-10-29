@@ -1882,3 +1882,51 @@ body{background:#20262F}
 .contact-banner-quote{font-size:clamp(32px,3.6vw,52px) !important;line-height:1.25;max-width:none;margin-top:24px}
 .contact-banner-sig{font-size:17px;letter-spacing:.16em;margin-top:32px;padding-top:22px}
 @media (max-width:880px){.contact-banner-quote{font-size:clamp(26px,6.4vw,34px) !important}.contact-banner-sig{font-size:14px}}
+
+/* ===========================================================================
+   Mobile pass (2026-10-28 night, Joey's order: "fix for mobile").
+   The facelift passes above re-introduced the Oct 22 cascade bug class:
+   unscoped late rules override the small-screen rules that sit earlier in
+   the file. Everything below is width-scoped and appended last so it wins
+   at phone widths; desktop rendering is untouched.
+   =========================================================================== */
+@media (max-width: 880px) {
+  /* Drawer open: slide the page flat. The scale(.96) shrink read as the
+     whole page tilting away on a phone. */
+  .page-shell.is-shifted { transform: translateX(calc(-1 * var(--drawer-w))); }
+  /* Accordion plus glyph: 14px was easy to miss; the button itself was
+     already a full-width 70px+ target. */
+  .svc-plus { width: 18px; height: 18px; }
+}
+@media (max-width: 720px) {
+  /* ABOUT: the unscoped facelift rule (minmax(260px,380px) 1fr) beat the
+     <=720 stack, so phones got a 260px photo column and a ~90px ribbon of
+     bio text — the Oct 22 bug, back again. Stack it: portrait full-width
+     above the text. */
+  .about-card { grid-template-columns: 1fr; gap: 26px; }
+  .catherine-portrait img { aspect-ratio: 4 / 5; height: auto; object-position: 50% 20%; }
+  /* Policy strip: five cells at two-across squeezed the text between
+     561-720px; one column the whole phone range. */
+  .policy-grid { grid-template-columns: 1fr; }
+  /* The studio email is 29 characters; let it wrap instead of forcing
+     the row wider than the screen. */
+  .contact-row .val { overflow-wrap: anywhere; }
+}
+@media (max-width: 560px) {
+  /* Footer logo was fixed at 391px !important with no phone rule: wider
+     than a phone screen, clipped on the right. */
+  .foot-brand img { width: min(300px, 82vw) !important; height: auto; }
+  /* Hero: same headline, less first-screen sprawl. */
+  .hero { padding-top: 42px; padding-bottom: 46px; }
+  .hero-h1 { line-height: 1.16; margin-top: 22px; }
+  /* The big intro/policy paragraphs were forced to 18px by earlier passes;
+     at phone widths that is a wall. 16.5/16px with calmer leading. */
+  .section-head p, .section-head .lede { font-size: 16.5px !important; line-height: 1.65; }
+  .policy-text .body p { font-size: 16px !important; line-height: 1.7; }
+  .policy-cell p { font-size: 15.5px; line-height: 1.65; }
+  /* Booking card facts: label over value instead of a squeezed pair. */
+  .book-list li { flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px 0; }
+  .book-list .val { text-align: left; }
+  /* Footer links get thumb room. */
+  .foot-col a { display: block; padding-top: 6px; padding-bottom: 6px; }
+}
