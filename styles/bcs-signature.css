@@ -191,3 +191,31 @@
   color: #ECE5D6;
   border-color: rgba(236, 229, 214, 0.45);
 }
+
+/* ----- Bull badge (out-of-state variant, Joey 2026-10-29) -----
+   The Fitting Room is in Wisconsin, so its signature carries the full
+   bull instead of the Durham flag. Same chip, same tagline. */
+.bcs-sig-bull {
+  background: #14181F;
+  border: 1px solid rgba(236, 229, 214, 0.12);
+  border-radius: 4px;
+  padding: 10px 14px;
+  line-height: 0;
+  display: inline-block;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+.bcs-sig-bull:hover {
+  border-color: #C8932E;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.65);
+}
+.bcs-sig-bull:focus-visible {
+  outline: 2px solid #C8932E;
+  outline-offset: 3px;
+}
+.bcs-sig-bull img {
+  display: block;
+  width: 132px;
+  height: auto;
+}
