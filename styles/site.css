@@ -20,7 +20,7 @@
   --blush-soft:   #F7CDC8;        /* dots, hairlines */
 
   --serif:  'Cormorant Garamond', 'Cormorant', 'Garamond', 'Hoefler Text', serif;
-  --sans:   'Public Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --sans:   'Libre Franklin', 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
   --mono:   'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   --rule: 1px solid var(--silver);

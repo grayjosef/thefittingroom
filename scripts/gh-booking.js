@@ -141,7 +141,7 @@
         colorText: v("--slate-deep", "#F2EDE2"),
         colorTextSecondary: v("--taupe", "#C4BBAC"),
         colorDanger: "#E8837B",
-        fontFamily: "'Public Sans', system-ui, sans-serif",
+        fontFamily: "'Libre Franklin', system-ui, sans-serif",
         fontSizeBase: "16px",
         borderRadius: "2px",
         spacingUnit: "4px",
