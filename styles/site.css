@@ -1891,9 +1891,15 @@ body{background:#20262F}
    at phone widths; desktop rendering is untouched.
    =========================================================================== */
 @media (max-width: 880px) {
-  /* Drawer open: slide the page flat. The scale(.96) shrink read as the
-     whole page tilting away on a phone. */
-  .page-shell.is-shifted { transform: translateX(calc(-1 * var(--drawer-w))); }
+  /* Menu transition (Joey, 2026-10-29): phones get the SAME page push-tilt
+     the full site has, not a flattened slide. This is the desktop value,
+     copied exactly. */
+  .page-shell.is-shifted { transform: translateX(calc(-1 * var(--drawer-w) + 24px)) perspective(1800px) rotateY(5deg) scale(.93); filter: brightness(.82) saturate(.9); }
+  /* Booking grid: the unscoped facelift rule (1fr 1fr) beat the <=880
+     stack, so "How it works" sat side by side with the booking card at
+     half width each (Joey, 2026-10-29: "side by side and messy"). Stack:
+     steps full-width, card below. */
+  .book-grid { grid-template-columns: 1fr; gap: 36px; }
   /* Accordion plus glyph: 14px was easy to miss; the button itself was
      already a full-width 70px+ target. */
   .svc-plus { width: 18px; height: 18px; }
