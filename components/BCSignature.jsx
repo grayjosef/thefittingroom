@@ -36,7 +36,7 @@ function BCSignature() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Bull City Systems">
-        <img src={BULL_SRC} alt="" width="132" />
+        <img src={BULL_SRC} alt="" width="110" />
       </a>
       <a
         className="bcs-sig-tag"
