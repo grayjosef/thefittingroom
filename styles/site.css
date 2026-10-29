@@ -1936,3 +1936,9 @@ body{background:#20262F}
   /* Footer links get thumb room. */
   .foot-col a { display: block; padding-top: 6px; padding-bottom: 6px; }
 }
+
+/* ==== Button centering (Joey, 2026-10-29) ====
+   Center the Reserve a Consultation button on the Bridal Consultation
+   card it sits on. .btn is inline-flex, which ignores auto margins;
+   scoped to .svc-feature so no other button moves. */
+.svc-feature .btn { display: flex; width: fit-content; margin-inline: auto; }
