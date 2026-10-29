@@ -1,3 +1,11 @@
+/* Self-hosted Libre Franklin (2026-10-28): no Google Fonts dependency for the sans. */
+@font-face { font-family: 'Libre Franklin'; src: url('../assets/fonts/libre-franklin-300.woff2') format('woff2'); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Libre Franklin'; src: url('../assets/fonts/libre-franklin-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Libre Franklin'; src: url('../assets/fonts/libre-franklin-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Libre Franklin'; src: url('../assets/fonts/libre-franklin-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Libre Franklin'; src: url('../assets/fonts/libre-franklin-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Libre Franklin'; src: url('../assets/fonts/libre-franklin-700.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+
 /* The Fitting Room at Gray House — Legal page styles
    Inherits the site's quiet-luxury palette for visual continuity */
 
